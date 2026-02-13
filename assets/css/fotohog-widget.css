@@ -1,0 +1,202 @@
+﻿.fotohog-stack {
+  position: relative;
+  height: var(--fotohog-height, 420px);
+  min-height: 220px;
+  width: 100%;
+  transition: height 260ms ease;
+}
+
+.fotohog-stack.anim-soft .fotohog-card {
+  transition: transform 320ms ease, box-shadow 260ms ease;
+}
+
+.fotohog-stack.anim-bouncy .fotohog-card {
+  transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1.2), box-shadow 300ms ease;
+}
+
+.fotohog-stack.anim-instant .fotohog-card {
+  transition: none;
+}
+
+.fotohog-stack.has-hover-autoscale .fotohog-card {
+  transition-timing-function: var(--fotohog-autoscale-ease, ease), ease;
+}
+
+.fotohog-stack.grid-on-hover:hover {
+  height: max(var(--fotohog-height, 420px), var(--fotohog-grid-height, 420px));
+}
+
+.fotohog-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--fotohog-photo-width, 220px);
+  padding: 6px 6px 26px;
+  margin: 0;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  border-radius: 2px;
+  transform: perspective(760px) translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(var(--card-scale, 1)) rotate(var(--rot, 0deg)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+}
+
+.fotohog-card-inner {
+  transform: none;
+}
+
+.fotohog-stack.grid-on-hover:hover .fotohog-card {
+  transform: perspective(760px) translate(calc(-50% + var(--gx, 0px)), calc(-50% + var(--gy, 0px))) scale(var(--card-scale, 1)) rotate(0deg) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.fotohog-stack.has-hover-autoscale.grid-on-hover:hover .fotohog-card {
+  --card-scale: var(--fotohog-hover-grid-scale, 1);
+}
+
+.fotohog-stack.always-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--fotohog-grid-cols, 3), minmax(0, 1fr));
+  gap: var(--fotohog-grid-gap, 18px);
+  align-items: start;
+  height: auto;
+  min-height: 0;
+}
+
+.fotohog-stack.always-grid .fotohog-card {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 100%;
+  transform: none;
+  margin: 0;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.fotohog-stack.has-hover .fotohog-card:hover {
+  transform: perspective(760px) translate(calc(-50% + var(--tx, 0px)), calc(-52% + var(--ty, 0px))) scale(var(--card-scale, 1)) rotate(var(--rot, 0deg)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.28);
+}
+
+.fotohog-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.fotohog-stack.theme-dark .fotohog-card {
+  background: #1f1f1f;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
+}
+
+.fotohog-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: #ececec;
+  transition: filter 220ms ease;
+}
+
+.fotohog-stack.tone-gray-static .fotohog-image {
+  filter: grayscale(100%);
+}
+
+.fotohog-stack.tone-gray-to-color .fotohog-image {
+  filter: grayscale(100%);
+}
+
+.fotohog-stack.tone-gray-to-color .fotohog-card:hover .fotohog-image {
+  filter: grayscale(0%);
+}
+
+.fotohog-stack.tone-color-to-gray .fotohog-image {
+  filter: grayscale(0%);
+}
+
+.fotohog-stack.tone-color-to-gray .fotohog-card:hover .fotohog-image {
+  filter: grayscale(100%);
+}
+
+.fotohog-caption {
+  position: static;
+  display: block;
+  margin-top: 10px;
+  min-height: 22px;
+  padding: 0 2px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.25;
+  color: #2f2f2f;
+  font-family: "Comic Sans MS", "Bradley Hand", "Marker Felt", cursive;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 220ms ease, transform 220ms ease;
+  pointer-events: none;
+}
+
+.fotohog-stack.theme-dark .fotohog-caption {
+  color: #ededed;
+}
+
+.fotohog-stack.grid-on-hover.has-grid-caption:hover .fotohog-caption,
+.fotohog-stack.always-grid.has-grid-caption .fotohog-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fotohog-empty {
+  padding: 16px;
+  border: 1px dashed #bbb;
+  border-radius: 6px;
+  color: #555;
+}
+
+@media (max-width: 767px) {
+  .fotohog-card {
+    width: min(var(--fotohog-photo-width, 220px), 74vw);
+  }
+}
+
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
+  .fotohog-stack.always-grid {
+    grid-template-columns: repeat(var(--fotohog-mobile-cols, 2), minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .fotohog-stack.grid-on-hover {
+    display: grid;
+    grid-template-columns: repeat(var(--fotohog-mobile-cols, 2), minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+    height: auto;
+    min-height: 0;
+  }
+
+  .fotohog-stack.grid-on-hover:hover {
+    height: auto;
+  }
+
+  .fotohog-stack.grid-on-hover .fotohog-card,
+  .fotohog-stack.grid-on-hover:hover .fotohog-card {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    transform: none;
+    margin: 0;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  .fotohog-stack.grid-on-hover .fotohog-caption {
+    opacity: 1;
+    transform: none;
+  }
+
+  .fotohog-stack.tone-gray-to-color .fotohog-image {
+    filter: grayscale(0%);
+  }
+
+  .fotohog-stack.tone-color-to-gray .fotohog-image {
+    filter: grayscale(100%);
+  }
+}
