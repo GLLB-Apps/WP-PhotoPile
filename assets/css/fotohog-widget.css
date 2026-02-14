@@ -1,9 +1,26 @@
-﻿.fotohog-stack {
+.fotohog-stack {
   position: relative;
+  display: block;
   height: var(--fotohog-height, 420px);
   min-height: 220px;
   width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  z-index: 0;
   transition: height 260ms ease;
+}
+
+.fotohog-stack::before,
+.fotohog-stack::after {
+  content: none !important;
+  display: none !important;
+}
+
+.fotohog-stack,
+.fotohog-stack *,
+.fotohog-stack *::before,
+.fotohog-stack *::after {
+  box-sizing: border-box;
 }
 
 .fotohog-stack.anim-soft .fotohog-card {
@@ -26,20 +43,27 @@
   height: max(var(--fotohog-height, 420px), var(--fotohog-grid-height, 420px));
 }
 
-.fotohog-card {
+.fotohog-stack .fotohog-card {
   position: absolute;
   top: 50%;
   left: 50%;
+  right: auto;
+  bottom: auto;
+  float: none;
+  clear: none;
+  max-width: none;
+  min-width: 0;
   width: var(--fotohog-photo-width, 220px);
   padding: 6px 6px 26px;
   margin: 0;
   background: #fff;
+  border: 0;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
   border-radius: 2px;
   transform: perspective(760px) translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(var(--card-scale, 1)) rotate(var(--rot, 0deg)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
 }
 
-.fotohog-card-inner {
+.fotohog-stack .fotohog-card-inner {
   transform: none;
 }
 
@@ -76,7 +100,7 @@
   box-shadow: 0 20px 30px rgba(0, 0, 0, 0.28);
 }
 
-.fotohog-link {
+.fotohog-stack .fotohog-link {
   display: block;
   color: inherit;
   text-decoration: none;
@@ -87,7 +111,7 @@
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
 }
 
-.fotohog-image {
+.fotohog-stack .fotohog-image {
   display: block;
   width: 100%;
   height: auto;
@@ -117,7 +141,7 @@
   filter: grayscale(100%);
 }
 
-.fotohog-caption {
+.fotohog-stack .fotohog-caption {
   position: static;
   display: block;
   margin-top: 10px;
@@ -144,7 +168,7 @@
   transform: translateY(0);
 }
 
-.fotohog-empty {
+.fotohog-stack .fotohog-empty {
   padding: 16px;
   border: 1px dashed #bbb;
   border-radius: 6px;
@@ -152,7 +176,7 @@
 }
 
 @media (max-width: 767px) {
-  .fotohog-card {
+  .fotohog-stack .fotohog-card {
     width: min(var(--fotohog-photo-width, 220px), 74vw);
   }
 }

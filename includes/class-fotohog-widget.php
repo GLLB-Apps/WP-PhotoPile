@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Image_Size;
@@ -31,11 +31,11 @@ class Fotohog_Widget extends Widget_Base {
     }
 
     public function get_style_depends() {
-        return array( 'fotohog-widget' );
+        return array( 'fotohog-widget-v2' );
     }
 
     public function get_script_depends() {
-        return array( 'fotohog-widget' );
+        return array( 'fotohog-widget-v2' );
     }
 
     protected function register_controls() {
