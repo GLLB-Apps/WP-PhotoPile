@@ -24,6 +24,7 @@ The widget supports captions, lightbox, custom links, dark card theme, grayscale
   - custom caption
   - click action (`None`, `Open lightbox`, `Open URL`)
 - Light/Dark card theme
+- Optional texture card surface with one or more PNG backgrounds
 - Image color modes:
   - Normal static
   - Black and white static
@@ -59,6 +60,8 @@ The widget supports captions, lightbox, custom links, dark card theme, grayscale
   - grid columns / gap
   - animation preset
   - card theme
+  - card surface (`Classic polaroid` or `Texture from PNG`)
+  - texture PNG list + texture fit (when texture mode is selected)
   - color mode
 4. Optional:
   - enable proximity bend

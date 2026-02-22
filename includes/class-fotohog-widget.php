@@ -27,7 +27,7 @@ class Fotohog_Widget extends Widget_Base {
     }
 
     public function get_keywords() {
-        return array( 'photo', 'gallery', 'stack', 'polaroid' );
+        return array( 'photo', 'gallery', 'stack', 'polaroid', 'texture', 'png' );
     }
 
     public function get_style_depends() {
@@ -131,9 +131,27 @@ class Fotohog_Widget extends Widget_Base {
                 'type'    => Controls_Manager::SELECT,
                 'default' => 'stack_hover_grid',
                 'options' => array(
-                    'stack_hover_grid' => esc_html__( 'Stack to grid on hover', 'fotohog-elementor' ),
-                    'stack_only'       => esc_html__( 'Stack only', 'fotohog-elementor' ),
-                    'grid_only'        => esc_html__( 'Grid only', 'fotohog-elementor' ),
+                    'stack_hover_grid'   => esc_html__( 'Stack to grid on hover', 'fotohog-elementor' ),
+                    'stack_hover_slider' => esc_html__( 'Stack to slider on hover', 'fotohog-elementor' ),
+                    'stack_only'         => esc_html__( 'Stack only', 'fotohog-elementor' ),
+                    'grid_only'          => esc_html__( 'Grid only', 'fotohog-elementor' ),
+                ),
+            )
+        );
+
+        $this->add_control(
+            'mobile_hover_fallback',
+            array(
+                'label'       => esc_html__( 'Mobile layout (for hover modes)', 'fotohog-elementor' ),
+                'description' => esc_html__( 'Used on touch devices where hover is not available.', 'fotohog-elementor' ),
+                'type'        => Controls_Manager::SELECT,
+                'default'     => 'slider',
+                'options'     => array(
+                    'slider' => esc_html__( 'Slider', 'fotohog-elementor' ),
+                    'grid'   => esc_html__( 'Grid', 'fotohog-elementor' ),
+                ),
+                'condition'   => array(
+                    'display_mode' => array( 'stack_hover_grid', 'stack_hover_slider' ),
                 ),
             )
         );
@@ -187,6 +205,71 @@ class Fotohog_Widget extends Widget_Base {
                 'options' => array(
                     'light' => esc_html__( 'Light', 'fotohog-elementor' ),
                     'dark'  => esc_html__( 'Dark', 'fotohog-elementor' ),
+                ),
+            )
+        );
+
+        $this->add_control(
+            'card_surface',
+            array(
+                'label'   => esc_html__( 'Card surface', 'fotohog-elementor' ),
+                'type'    => Controls_Manager::SELECT,
+                'default' => 'polaroid',
+                'options' => array(
+                    'polaroid' => esc_html__( 'Classic polaroid', 'fotohog-elementor' ),
+                    'texture'  => esc_html__( 'Texture from PNG', 'fotohog-elementor' ),
+                ),
+            )
+        );
+
+        $this->add_control(
+            'card_textures',
+            array(
+                'label'       => esc_html__( 'Texture PNGs', 'fotohog-elementor' ),
+                'description' => esc_html__( 'Choose one or more PNGs (for example hedge texture). They are rotated across cards.', 'fotohog-elementor' ),
+                'type'        => Controls_Manager::GALLERY,
+                'default'     => array(),
+                'condition'   => array(
+                    'card_surface' => 'texture',
+                ),
+            )
+        );
+
+        $this->add_control(
+            'card_texture_fit',
+            array(
+                'label'     => esc_html__( 'Texture fit', 'fotohog-elementor' ),
+                'type'      => Controls_Manager::SELECT,
+                'default'   => 'cover',
+                'options'   => array(
+                    'cover'   => esc_html__( 'Cover', 'fotohog-elementor' ),
+                    'contain' => esc_html__( 'Contain', 'fotohog-elementor' ),
+                    'repeat'  => esc_html__( 'Repeat', 'fotohog-elementor' ),
+                ),
+                'condition' => array(
+                    'card_surface' => 'texture',
+                ),
+            )
+        );
+
+        $this->add_responsive_control(
+            'card_texture_size',
+            array(
+                'label'      => esc_html__( 'Texture size', 'fotohog-elementor' ),
+                'type'       => Controls_Manager::SLIDER,
+                'size_units' => array( '%' ),
+                'range'      => array(
+                    '%' => array(
+                        'min' => 50,
+                        'max' => 300,
+                    ),
+                ),
+                'default'    => array(
+                    'unit' => '%',
+                    'size' => 100,
+                ),
+                'condition'  => array(
+                    'card_surface' => 'texture',
                 ),
             )
         );
@@ -492,9 +575,29 @@ class Fotohog_Widget extends Widget_Base {
         $show_caption = ( isset( $settings['show_caption'] ) && 'yes' === $settings['show_caption'] );
         $hover_lift   = ( isset( $settings['hover_lift'] ) && 'yes' === $settings['hover_lift'] );
         $card_theme   = isset( $settings['card_theme'] ) ? $settings['card_theme'] : 'light';
+        $card_surface = isset( $settings['card_surface'] ) ? $settings['card_surface'] : 'polaroid';
+        $texture_fit  = isset( $settings['card_texture_fit'] ) ? $settings['card_texture_fit'] : 'cover';
+        $texture_size = isset( $settings['card_texture_size']['size'] ) ? (float) $settings['card_texture_size']['size'] : 100;
         $tone_mode    = isset( $settings['image_tone_mode'] ) ? $settings['image_tone_mode'] : 'normal_static';
         $proximity    = ( isset( $settings['enable_proximity_tilt'] ) && 'yes' === $settings['enable_proximity_tilt'] );
         $hover_scale  = ( isset( $settings['enable_hover_autoscale'] ) && 'yes' === $settings['enable_hover_autoscale'] );
+
+        $texture_urls = array();
+        if ( ! empty( $settings['card_textures'] ) && is_array( $settings['card_textures'] ) ) {
+            foreach ( $settings['card_textures'] as $texture ) {
+                $texture_id  = ! empty( $texture['id'] ) ? (int) $texture['id'] : 0;
+                $texture_url = '';
+                if ( $texture_id ) {
+                    $texture_url = wp_get_attachment_image_url( $texture_id, 'full' );
+                } elseif ( ! empty( $texture['url'] ) ) {
+                    $texture_url = $texture['url'];
+                }
+                if ( $texture_url ) {
+                    $texture_urls[] = $texture_url;
+                }
+            }
+        }
+        $use_texture_surface = ( 'texture' === $card_surface && ! empty( $texture_urls ) );
 
         $image_count = count( $items );
         $columns     = isset( $settings['grid_columns']['size'] ) ? (int) $settings['grid_columns']['size'] : 3;
@@ -518,14 +621,20 @@ class Fotohog_Widget extends Widget_Base {
         );
         $scale_ease_css = isset( $ease_map[ $scale_ease ] ) ? $ease_map[ $scale_ease ] : 'ease';
 
-        $card_height  = $photo_width + 52;
+        $card_height  = $use_texture_surface ? $photo_width + 30 : $photo_width + 52;
         $rows         = (int) ceil( $image_count / $columns );
         $grid_total_w = ( $columns * $photo_width ) + ( max( 0, $columns - 1 ) * $grid_gap );
         $grid_total_h = ( $rows * $card_height ) + ( max( 0, $rows - 1 ) * $grid_gap );
         $grid_safe_h  = $grid_total_h + 40;
+        $slider_total_w = ( $image_count * $photo_width ) + ( max( 0, $image_count - 1 ) * $grid_gap );
+        $slider_safe_h  = $card_height + 32;
+        $mobile_hover_fallback = isset( $settings['mobile_hover_fallback'] ) ? $settings['mobile_hover_fallback'] : 'slider';
+        if ( ! in_array( $mobile_hover_fallback, array( 'slider', 'grid' ), true ) ) {
+            $mobile_hover_fallback = 'slider';
+        }
 
         $wrapper_styles = sprintf(
-            '--fotohog-height:%1$s%2$s;--fotohog-photo-width:%3$spx;--fotohog-grid-height:%4$spx;--fotohog-mobile-cols:%5$s;--fotohog-grid-cols:%6$s;--fotohog-grid-gap:%7$spx;--fotohog-autoscale-ease:%8$s;',
+            '--fotohog-height:%1$s%2$s;--fotohog-photo-width:%3$spx;--fotohog-grid-height:%4$spx;--fotohog-mobile-cols:%5$s;--fotohog-grid-cols:%6$s;--fotohog-grid-gap:%7$spx;--fotohog-autoscale-ease:%8$s;--fotohog-texture-fit:%9$s;--fotohog-texture-size:%10$s;--fotohog-slider-height:%11$spx;',
             esc_attr( $stack_height ),
             esc_attr( $stack_unit ),
             esc_attr( $photo_width ),
@@ -533,7 +642,10 @@ class Fotohog_Widget extends Widget_Base {
             esc_attr( $mobile_cols ),
             esc_attr( $columns ),
             esc_attr( round( $grid_gap, 2 ) ),
-            esc_attr( $scale_ease_css )
+            esc_attr( $scale_ease_css ),
+            esc_attr( $texture_fit ),
+            esc_attr( round( $texture_size, 1 ) . '%' ),
+            esc_attr( round( $slider_safe_h, 2 ) )
         );
 
         $wrapper_classes = 'fotohog-stack';
@@ -544,14 +656,26 @@ class Fotohog_Widget extends Widget_Base {
         if ( 'stack_hover_grid' === $display_mode ) {
             $wrapper_classes .= ' grid-on-hover';
         }
+        if ( 'stack_hover_slider' === $display_mode ) {
+            $wrapper_classes .= ' slider-on-hover';
+        }
         if ( 'grid_only' === $display_mode ) {
             $wrapper_classes .= ' always-grid';
         }
         if ( $show_caption && 'stack_only' !== $display_mode ) {
             $wrapper_classes .= ' has-grid-caption';
         }
+        if ( in_array( $display_mode, array( 'stack_hover_grid', 'stack_hover_slider' ), true ) ) {
+            $wrapper_classes .= ( 'slider' === $mobile_hover_fallback ) ? ' mobile-fallback-slider' : ' mobile-fallback-grid';
+        }
         if ( 'dark' === $card_theme ) {
             $wrapper_classes .= ' theme-dark';
+        }
+        if ( $use_texture_surface ) {
+            $wrapper_classes .= ' card-surface-texture';
+            if ( 'repeat' === $texture_fit ) {
+                $wrapper_classes .= ' texture-fit-repeat';
+            }
         }
 
         $tone_class_map = array(
@@ -612,16 +736,24 @@ class Fotohog_Widget extends Widget_Base {
             $grid_row = (int) floor( $index / $columns );
             $grid_x   = ( -$grid_total_w / 2 ) + ( $grid_col * ( $photo_width + $grid_gap ) ) + ( $photo_width / 2 );
             $grid_y   = ( -$grid_total_h / 2 ) + ( $grid_row * ( $card_height + $grid_gap ) ) + ( $card_height / 2 );
+            $slider_x = ( -$slider_total_w / 2 ) + ( $index * ( $photo_width + $grid_gap ) ) + ( $photo_width / 2 );
+            $slider_y = 0;
 
             $card_style = sprintf(
-                '--tx:%1$spx;--ty:%2$spx;--rot:%3$sdeg;--gx:%4$spx;--gy:%5$spx;z-index:%6$s;',
+                '--tx:%1$spx;--ty:%2$spx;--rot:%3$sdeg;--gx:%4$spx;--gy:%5$spx;--sx:%6$spx;--sy:%7$spx;z-index:%8$s;',
                 esc_attr( round( $translate_x, 2 ) ),
                 esc_attr( round( $translate_y, 2 ) ),
                 esc_attr( round( $angle, 2 ) ),
                 esc_attr( round( $grid_x, 2 ) ),
                 esc_attr( round( $grid_y, 2 ) ),
+                esc_attr( round( $slider_x, 2 ) ),
+                esc_attr( round( $slider_y, 2 ) ),
                 esc_attr( 50 + $index )
             );
+            if ( $use_texture_surface ) {
+                $texture_url = $texture_urls[ $index % count( $texture_urls ) ];
+                $card_style .= '--fotohog-card-texture:url(\'' . esc_url( $texture_url ) . '\');';
+            }
 
             $image_html = '';
             $full_url   = '';

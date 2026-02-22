@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fotohög till Elementor
  * Description: Adds a photo stack widget to Elementor.
- * Version: 2.0.4
+ * Version: 2.1.1
  * Author: David Gullberg
  * Author URI: https://gllb.se 
  * Requires at least: 6.0
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class Fotohog_Elementor_Plugin {
-    const VERSION = '2.0.4';
+    const VERSION = '2.1.1';
 
     public function __construct() {
         add_action( 'plugins_loaded', array( $this, 'init' ) );
