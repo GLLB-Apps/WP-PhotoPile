@@ -130,7 +130,7 @@
 }
 
 .fotohog-stack.slider-on-hover:hover .fotohog-card {
-  transform: perspective(760px) translate(calc(-50% + var(--sx, 0px)), calc(-50% + var(--sy, 0px))) scale(var(--card-scale, 1)) rotate(0deg) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform: perspective(760px) translate(calc(-50% + var(--sx, 0px) + var(--fotohog-slider-hover-shift, 0px)), calc(-50% + var(--sy, 0px))) scale(var(--card-scale, 1)) rotate(0deg) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
@@ -234,6 +234,94 @@
   color: #555;
 }
 
+.fotohog-slider-nav {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  margin-top: 10px;
+}
+
+.fotohog-stack.slider-on-hover + .fotohog-slider-nav {
+  display: flex;
+}
+
+.fotohog-slider-nav-btn {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: #fff;
+  color: #1f1f1f;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  transition: transform 120ms ease, opacity 120ms ease, box-shadow 120ms ease;
+}
+
+.fotohog-slider-nav-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.16);
+}
+
+.fotohog-slider-nav-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+.fotohog-slider-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: min(70vw, 360px);
+  overflow-x: auto;
+  padding: 2px 2px;
+  scrollbar-width: none;
+}
+
+.fotohog-slider-dots::-webkit-scrollbar {
+  display: none;
+}
+
+.fotohog-slider-dot {
+  appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 0;
+  flex: 0 0 auto;
+  cursor: pointer;
+  transition: transform 140ms ease, background-color 140ms ease, width 140ms ease;
+}
+
+.fotohog-slider-dot.is-active {
+  width: 20px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.fotohog-stack.theme-dark + .fotohog-slider-nav .fotohog-slider-dot {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.fotohog-stack.theme-dark + .fotohog-slider-nav .fotohog-slider-dot.is-active {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.fotohog-stack.theme-dark + .fotohog-slider-nav .fotohog-slider-nav-btn {
+  background: #252525;
+  color: #f2f2f2;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
 @media (max-width: 767px) {
   .fotohog-stack .fotohog-card {
     width: min(var(--fotohog-photo-width, 220px), 74vw);
@@ -241,6 +329,18 @@
 }
 
 @media (max-width: 767px), (hover: none) and (pointer: coarse) {
+  .fotohog-stack.slider-on-hover.mobile-fallback-grid + .fotohog-slider-nav {
+    display: none;
+  }
+
+  .fotohog-stack.mobile-fallback-slider + .fotohog-slider-nav {
+    display: flex;
+  }
+
+  .fotohog-slider-nav {
+    gap: 8px;
+  }
+
   .fotohog-stack.always-grid {
     grid-template-columns: repeat(var(--fotohog-mobile-cols, 2), minmax(0, 1fr));
     gap: 12px;

@@ -14,6 +14,62 @@
       return Number.isFinite(num) ? num : 0;
     };
 
+    var updateHoverSliderStart = function (widget) {
+      if (!widget.classList.contains('slider-on-hover')) {
+        return;
+      }
+      widget.dataset.hoverSlideIndex = '0';
+
+      var cards = Array.prototype.slice.call(widget.querySelectorAll('.fotohog-card'));
+      if (!cards.length) {
+        widget.style.setProperty('--fotohog-slider-hover-shift', '0px');
+        return;
+      }
+
+      var firstLeft = Infinity;
+      cards.forEach(function (card) {
+        var sx = parseCssPx(card.style.getPropertyValue('--sx'));
+        var w = card.offsetWidth || card.getBoundingClientRect().width || 0;
+        var left = sx - (w / 2);
+        if (left < firstLeft) {
+          firstLeft = left;
+        }
+      });
+
+      if (!Number.isFinite(firstLeft)) {
+        widget.style.setProperty('--fotohog-slider-hover-shift', '0px');
+        return;
+      }
+
+      var targetLeft = (-widget.clientWidth / 2) + 4;
+      var shift = targetLeft - firstLeft;
+      widget.style.setProperty('--fotohog-slider-hover-shift', shift.toFixed(2) + 'px');
+    };
+
+    var setHoverSliderIndex = function (widget, index) {
+      if (!widget.classList.contains('slider-on-hover')) {
+        return;
+      }
+
+      var cards = Array.prototype.slice.call(widget.querySelectorAll('.fotohog-card'));
+      if (!cards.length) {
+        widget.dataset.hoverSlideIndex = '0';
+        widget.style.setProperty('--fotohog-slider-hover-shift', '0px');
+        return;
+      }
+
+      var safeIndex = Math.max(0, Math.min(cards.length - 1, Number(index) || 0));
+      var card = cards[safeIndex];
+      var sx = parseCssPx(card.style.getPropertyValue('--sx'));
+      var w = card.offsetWidth || card.getBoundingClientRect().width || 0;
+      var left = sx - (w / 2);
+      var targetLeft = (-widget.clientWidth / 2) + 4;
+      var shift = targetLeft - left;
+
+      widget.dataset.hoverSlideIndex = String(safeIndex);
+      widget.style.setProperty('--fotohog-slider-hover-shift', shift.toFixed(2) + 'px');
+    };
+
     var updateHoverGridScale = function (widget) {
       if (!widget.classList.contains('grid-on-hover')) {
         return;
@@ -68,6 +124,7 @@
 
     widgets.forEach(function (widget) {
       updateHoverGridScale(widget);
+      updateHoverSliderStart(widget);
 
       if (widget.dataset.fotohogBound === '1') {
         return;
@@ -76,7 +133,166 @@
 
       widget.addEventListener('pointerenter', function () {
         updateHoverGridScale(widget);
+        updateHoverSliderStart(widget);
       }, { passive: true });
+    });
+
+    var navs = root.querySelectorAll('.fotohog-slider-nav');
+    navs.forEach(function (nav) {
+      var widget = nav.previousElementSibling;
+      if (!widget || !widget.classList || !widget.classList.contains('fotohog-stack')) {
+        return;
+      }
+
+      if (nav.dataset.fotohogNavBound === '1') {
+        return;
+      }
+      nav.dataset.fotohogNavBound = '1';
+
+      var prevBtn = nav.querySelector('.fotohog-slider-nav-btn.is-prev');
+      var nextBtn = nav.querySelector('.fotohog-slider-nav-btn.is-next');
+      var dots = Array.prototype.slice.call(nav.querySelectorAll('.fotohog-slider-dot'));
+      if (!prevBtn || !nextBtn) {
+        return;
+      }
+
+      var getStep = function () {
+        var firstCard = widget.querySelector('.fotohog-card');
+        if (!firstCard) {
+          return Math.max(160, widget.clientWidth * 0.8);
+        }
+        var cardWidth = firstCard.getBoundingClientRect().width || firstCard.offsetWidth || 220;
+        return Math.max(120, cardWidth + 12);
+      };
+
+      var getCards = function () {
+        return Array.prototype.slice.call(widget.querySelectorAll('.fotohog-card'));
+      };
+
+      var isScrollableSlider = function () {
+        var style = window.getComputedStyle(widget);
+        return (widget.scrollWidth - widget.clientWidth) > 2 && (style.overflowX === 'auto' || style.overflowX === 'scroll');
+      };
+
+      var setDotState = function (activeIndex) {
+        if (!dots.length) {
+          return;
+        }
+
+        dots.forEach(function (dot, index) {
+          var active = index === activeIndex;
+          dot.classList.toggle('is-active', active);
+          dot.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+
+        if (dots[activeIndex] && typeof dots[activeIndex].scrollIntoView === 'function') {
+          dots[activeIndex].scrollIntoView({ inline: 'nearest', block: 'nearest' });
+        }
+      };
+
+      var updateNavState = function () {
+        if (isScrollableSlider()) {
+          var maxScroll = Math.max(0, widget.scrollWidth - widget.clientWidth);
+          var current = widget.scrollLeft;
+          prevBtn.disabled = current <= 2;
+          nextBtn.disabled = current >= (maxScroll - 2);
+
+          if (dots.length) {
+            var cards = getCards();
+            var activeIndex = 0;
+            var bestDistance = Infinity;
+
+            cards.forEach(function (card, index) {
+              var distance = Math.abs((card.offsetLeft || 0) - current);
+              if (distance < bestDistance) {
+                bestDistance = distance;
+                activeIndex = index;
+              }
+            });
+
+            setDotState(activeIndex);
+          }
+          return;
+        }
+
+        if (widget.classList.contains('slider-on-hover')) {
+          var cardCount = getCards().length;
+          var maxIndex = Math.max(0, cardCount - 1);
+          var hoverIndex = parseInt(widget.dataset.hoverSlideIndex || '0', 10);
+          if (!Number.isFinite(hoverIndex)) {
+            hoverIndex = 0;
+          }
+          hoverIndex = Math.max(0, Math.min(maxIndex, hoverIndex));
+          prevBtn.disabled = hoverIndex <= 0;
+          nextBtn.disabled = hoverIndex >= maxIndex;
+          setDotState(hoverIndex);
+          return;
+        }
+
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+      };
+
+      var moveHoverSlider = function (direction) {
+        var hoverIndex = parseInt(widget.dataset.hoverSlideIndex || '0', 10);
+        if (!Number.isFinite(hoverIndex)) {
+          hoverIndex = 0;
+        }
+        setHoverSliderIndex(widget, hoverIndex + direction);
+        updateNavState();
+      };
+
+      var scrollByStep = function (direction) {
+        widget.scrollBy({
+          left: getStep() * direction,
+          behavior: 'smooth'
+        });
+      };
+
+      prevBtn.addEventListener('click', function () {
+        if (isScrollableSlider()) {
+          scrollByStep(-1);
+          return;
+        }
+        moveHoverSlider(-1);
+      });
+
+      nextBtn.addEventListener('click', function () {
+        if (isScrollableSlider()) {
+          scrollByStep(1);
+          return;
+        }
+        moveHoverSlider(1);
+      });
+
+      dots.forEach(function (dot) {
+        dot.addEventListener('click', function () {
+          var index = parseInt(dot.dataset.slideIndex || '0', 10);
+          if (!Number.isFinite(index) || index < 0) {
+            index = 0;
+          }
+          var cards = widget.querySelectorAll('.fotohog-card');
+          var target = cards[index];
+          if (!target) {
+            return;
+          }
+          if (isScrollableSlider()) {
+            widget.scrollTo({
+              left: target.offsetLeft || 0,
+              behavior: 'smooth'
+            });
+            return;
+          }
+
+          setHoverSliderIndex(widget, index);
+          updateNavState();
+        });
+      });
+
+      widget.addEventListener('scroll', updateNavState, { passive: true });
+      widget.addEventListener('pointerenter', updateNavState, { passive: true });
+      window.addEventListener('resize', updateNavState, { passive: true });
+      updateNavState();
     });
 
     if (!hoverCapable) {

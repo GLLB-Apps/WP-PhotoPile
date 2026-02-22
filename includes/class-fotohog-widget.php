@@ -140,6 +140,18 @@ class Fotohog_Widget extends Widget_Base {
         );
 
         $this->add_control(
+            'reverse_order',
+            array(
+                'label'        => esc_html__( 'Reverse card order', 'fotohog-elementor' ),
+                'type'         => Controls_Manager::SWITCHER,
+                'label_on'     => esc_html__( 'On', 'fotohog-elementor' ),
+                'label_off'    => esc_html__( 'Off', 'fotohog-elementor' ),
+                'return_value' => 'yes',
+                'default'      => '',
+            )
+        );
+
+        $this->add_control(
             'mobile_hover_fallback',
             array(
                 'label'       => esc_html__( 'Mobile layout (for hover modes)', 'fotohog-elementor' ),
@@ -560,6 +572,10 @@ class Fotohog_Widget extends Widget_Base {
             }
         }
 
+        if ( isset( $settings['reverse_order'] ) && 'yes' === $settings['reverse_order'] ) {
+            $items = array_values( array_reverse( $items ) );
+        }
+
         if ( empty( $items ) ) {
             echo '<div class="fotohog-empty">' . esc_html__( 'Add photos to show the stack.', 'fotohog-elementor' ) . '</div>';
             return;
@@ -820,5 +836,21 @@ class Fotohog_Widget extends Widget_Base {
         }
 
         echo '</div>';
+
+        $render_slider_nav = ( 'stack_hover_slider' === $display_mode ) || ( in_array( $display_mode, array( 'stack_hover_grid', 'stack_hover_slider' ), true ) && 'slider' === $mobile_hover_fallback );
+        if ( $render_slider_nav ) {
+            echo '<div class="fotohog-slider-nav" aria-label="' . esc_attr__( 'Slider navigation', 'fotohog-elementor' ) . '">';
+            echo '<button type="button" class="fotohog-slider-nav-btn is-prev" data-dir="prev" aria-label="' . esc_attr__( 'Previous', 'fotohog-elementor' ) . '">&#8592;</button>';
+            if ( $image_count > 1 ) {
+                echo '<div class="fotohog-slider-dots" role="tablist" aria-label="' . esc_attr__( 'Slides', 'fotohog-elementor' ) . '">';
+                for ( $dot_index = 0; $dot_index < $image_count; $dot_index++ ) {
+                    $is_active = ( 0 === $dot_index ) ? ' is-active' : '';
+                    echo '<button type="button" class="fotohog-slider-dot' . esc_attr( $is_active ) . '" data-slide-index="' . esc_attr( $dot_index ) . '" aria-label="' . esc_attr( sprintf( __( 'Go to slide %d', 'fotohog-elementor' ), $dot_index + 1 ) ) . '" aria-pressed="' . esc_attr( 0 === $dot_index ? 'true' : 'false' ) . '"></button>';
+                }
+                echo '</div>';
+            }
+            echo '<button type="button" class="fotohog-slider-nav-btn is-next" data-dir="next" aria-label="' . esc_attr__( 'Next', 'fotohog-elementor' ) . '">&#8594;</button>';
+            echo '</div>';
+        }
     }
 }
